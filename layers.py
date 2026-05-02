@@ -132,8 +132,8 @@ class MultiHeadAttention(nn.Module):
 
         output = self.fc_out(output)   # this is doing just ... output @ wt + bias   -> a fully connected layer   # (batch, seq_len, d_model)
 
-        output = output + X  # residual connection 
-        output = self.norm(output)  # layer normalization 
+        # output = output + X  # residual connection 
+        # output = self.norm(output)  # layer normalization 
 
         return output
 
@@ -164,59 +164,5 @@ class InputBlock(nn.Module):
     def forward(self, X):
         # X : (batch, seq_len)
         return self.network(X)
-
-# vocab_size = 10000
-# d_model = 4
-#
-# embedding = TokenEmbedding(vocab_size, d_model)
-#
-# x = torch.randint(0, vocab_size, (2, 5))
-#
-# print(x.shape)
-#
-# out = embedding(x)
-#
-# print(out)
-# print(out.shape)
-#
-# pe = PositionalEncoding(d_model)
-# pev = pe(out)
-#
-# print(pev)
-# print(pev.shape)
-
-# attn = SelfAttention(d_model)
-# output_se = attn(pev)
-# print(output_se)
-# print(output_se.shape)
-
-# nh_attn = MultiHeadAttention(d_model, 2)
-# output_mha = nh_attn(pev)
-# print(output_mha)
-# print(output_mha.shape)
-#
-# ffnn = FeedForward(d_model)
-# output_final = ffnn(output_mha)
-# print(output_final)
-# print(output_final.shape)
-#
-
-
-vocab_size = 10000
-d_model = 4
-
-ib = InputBlock(vocab_size, d_model)
-X = torch.randint(0, vocab_size, (2, 5))
-out = ib(X)
-print(out)
-print(out.shape)
-
-
-
-
-
-
-
-
 
 
