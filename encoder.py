@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 class Encoder(nn.Module):
-    
+
     def __init__(self, vocab_size, d_model, num_heads, num_layers, max_len=5000):
         super().__init__()
 
@@ -28,12 +28,12 @@ class Encoder(nn.Module):
         self.norm2_layers = nn.ModuleList(
             [nn.LayerNorm(d_model) for _ in range(num_layers)]
         )
-        
+
     def forward(self, X):
         # X : (batch, seq_len)
-        
+
         X = self.input_block(X)
-        
+
         for i in range(len(self.mha_layers)):
 
             # multi head attention 

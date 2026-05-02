@@ -47,7 +47,7 @@ class PositionalEncoding(nn.Module):
         return X + self.pe[:, :seq_len]
 
 class SelfAttention(nn.Module):
-    
+
     def __init__(self, d_model):
         super().__init__()
 
@@ -105,12 +105,12 @@ class MultiHeadAttention(nn.Module):
         Q = self.wq(X)  # (batch, seq_len, d_model)
         K = self.wk(X)  # (batch, seq_len, d_model)
         V = self.wv(X)  # (batch, seq_len, d_model)
-        
+
         # split into heads 
         Q = Q.view(batch_size, seq_len, self.num_heads, self.head_dim)   # (batch, seq_len, num_heads, head_dim)
         K = K.view(batch_size, seq_len, self.num_heads, self.head_dim)
         V = V.view(batch_size, seq_len, self.num_heads, self.head_dim)
-        
+
         # 3. rearrange for attention  : swap dimesion 1 and 2 
         Q = Q.transpose(1, 2)   # (batch, num_heads, seq_len, head_dim)
         K = K.transpose(1, 2)
@@ -138,7 +138,7 @@ class MultiHeadAttention(nn.Module):
         return output
 
 class FeedForward(nn.Module):
-    
+
     def __init__(self, d_model):
         super().__init__()
 
@@ -155,7 +155,7 @@ class InputBlock(nn.Module):
 
     def __init__(self, vocab_size, d_model, max_len=5000):
         super().__init__()
-        
+
         self.network = nn.Sequential(
             TokenEmbedding(vocab_size, d_model),
             PositionalEncoding(d_model, max_len),

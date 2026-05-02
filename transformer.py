@@ -7,7 +7,7 @@ class Transformer(nn.Module):
 
     def __init__(self, vocab_size, d_model, num_heads, num_layers):
         super().__init__()
-        
+
         # encoder 
         self.encoder = Encoder(
             vocab_size = vocab_size,
