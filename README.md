@@ -16,7 +16,7 @@ Every component — from token embeddings to cross-attention — implemented man
 
 </div>
 
-[![view pdf](./transformer/img/front.jpeg)](./transformer/docs/transformer.pdf)
+[![view pdf](/transformer/img/front.jpeg)](/transformer/docs/transformer.pdf)
 
 ## 🗂️ Project Structure
 
