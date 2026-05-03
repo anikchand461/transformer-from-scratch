@@ -132,9 +132,6 @@ class MultiHeadAttention(nn.Module):
 
         output = self.fc_out(output)   # this is doing just ... output @ wt + bias   -> a fully connected layer   # (batch, seq_len, d_model)
 
-        # output = output + X  # residual connection 
-        # output = self.norm(output)  # layer normalization 
-
         return output
 
 class FeedForward(nn.Module):
@@ -165,4 +162,119 @@ class InputBlock(nn.Module):
         # X : (batch, seq_len)
         return self.network(X)
 
+class MaskedMultiHeadAttention(nn.Module):
 
+    def __init__(self, d_model, num_heads):
+        super().__init__()
+
+        assert d_model % num_heads == 0 # this is like an if else .... if this condition will fail immediately stop the whole process 
+
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.head_dim = d_model // num_heads
+
+        # same as the hingle head attention 
+        self.wq = nn.Linear(d_model, d_model)
+        self.wk = nn.Linear(d_model, d_model)
+        self.wv = nn.Linear(d_model, d_model)
+
+        # final projection 
+        self.fc_out = nn.Linear(d_model, d_model)
+
+    def forward(self, X, mask=None):
+        batch_size, seq_len, _ = X.shape
+
+        # 1. linear projections
+        Q = self.wq(X)  # (batch, seq_len, d_model)
+        K = self.wk(X)  # (batch, seq_len, d_model)
+        V = self.wv(X)  # (batch, seq_len, d_model)
+
+        # split into heads 
+        Q = Q.view(batch_size, seq_len, self.num_heads, self.head_dim)   # (batch, seq_len, num_heads, head_dim)
+        K = K.view(batch_size, seq_len, self.num_heads, self.head_dim)
+        V = V.view(batch_size, seq_len, self.num_heads, self.head_dim)
+
+        # 3. rearrange for attention  : swap dimesion 1 and 2 
+        Q = Q.transpose(1, 2)   # (batch, num_heads, seq_len, head_dim)
+        K = K.transpose(1, 2)
+        V = V.transpose(1, 2)
+
+        # 4. Atention score (same as before)
+        scores = torch.matmul(Q, K.transpose(-2, -1))  # (batch_size, num_heads, seq_len, head_dim)
+
+        # scale 
+        scores = scores / m.sqrt(self.head_dim)
+
+        # apply mask here 
+        if mask is not None:
+            scores = scores.masked_fill(mask==0, float('-1e9'))
+
+        # softmax
+        weights = torch.softmax(scores, dim=-1)  # (batch_size, num_heads, seq_len, head_dim)
+        # weighted sum 
+        output = torch.matmul(weights, V)  # (batch, num_heads, seq_len, head_dim)
+
+        # combine heads
+        output = output.transpose(1, 2)  # (batch, seq_len, num_heads, head_dim)
+
+        output = output.contiguous().view(batch_size, seq_len, self.d_model)  # (batch, seq_len, d_model)  d_model = num_heads * head_dim
+
+        output = self.fc_out(output)   # this is doing just ... output @ wt + bias   -> a fully connected layer   # (batch, seq_len, d_model)
+
+        return output
+
+class CrossAttention(nn.Module):
+
+    def __init__(self, d_model, num_heads):
+        super().__init__()
+
+        assert d_model % num_heads == 0 # this is like an if else .... if this condition will fail immediately stop the whole process 
+
+        self.d_model = d_model
+        self.num_heads = num_heads
+        self.head_dim = d_model // num_heads
+
+        # same as the hingle head attention 
+        self.wq = nn.Linear(d_model, d_model)
+        self.wk = nn.Linear(d_model, d_model)
+        self.wv = nn.Linear(d_model, d_model)
+
+        # final projection 
+        self.fc_out = nn.Linear(d_model, d_model)
+
+    def forward(self, Q_input, K_input, V_input):
+        batch_size = Q_input.shape[0]
+
+        # 1. linear projections
+        Q = self.wq(Q_input)  # (batch, tgt_len, d_model)
+        K = self.wk(K_input)  # (batch, src_len, d_model)
+        V = self.wv(V_input)  # (batch, src_len, d_model)
+
+        # split into heads 
+        Q = Q.view(batch_size, -1, self.num_heads, self.head_dim)   # (batch, src_len, num_heads, head_dim)
+        K = K.view(batch_size, -1, self.num_heads, self.head_dim)   # (batch, tgt_len, num_heads, head_dim)
+        V = V.view(batch_size, -1, self.num_heads, self.head_dim)   # (batch, tgt_len, num_heads, head_dim)
+
+        # 3. rearrange for attention  : swap dimesion 1 and 2 
+        Q = Q.transpose(1, 2)   # (batch, num_heads, src_len, head_dim)
+        K = K.transpose(1, 2)   # (batch, num_heads, tgt_len, head_dim)
+        V = V.transpose(1, 2)   # (batch, num_heads, tgt_len, head_dim)
+
+        # 4. Atention score (same as before)
+        scores = torch.matmul(Q, K.transpose(-2, -1))  # (batch_size, num_heads, tgt_len, src_len)
+
+        # scale 
+        scores = scores / m.sqrt(self.head_dim)
+        # softmax
+        weights = torch.softmax(scores, dim=-1)   # (batch_size, num_heads, src_len, tgt_len)
+        # weighted sum 
+        output = torch.matmul(weights, V)  # (batch, num_heads, tgt_len, head_dim)
+
+        # combine heads
+        output = output.transpose(1, 2)  # (batch, tgt_len, num_heads, head_dim)
+
+        output = output.contiguous().view(batch_size, -1, self.d_model)  # (batch, tgt_len, d_model)  d_model = num_heads * head_dim
+
+        output = self.fc_out(output)   # this is doing just ... output @ wt + bias   -> a fully connected layer   # (batch, tgt_len, d_model)
+
+        return output
