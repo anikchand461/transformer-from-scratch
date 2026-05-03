@@ -16,41 +16,7 @@ Every component — from token embeddings to cross-attention — implemented man
 
 </div>
 
----
-
-## 📐 Architecture
-
-```
-                        ┌─────────────────────────────────┐
-                        │            ENCODER               │
-  Inputs                │  InputBlock (Embed + PosEnc)     │
-    │                   │       ↓                          │
-    └──────────────────▶│  MultiHeadAttention              │
-                        │       ↓  (+ residual + norm)     │
-                        │  FeedForward                     │
-                        │       ↓  (+ residual + norm)     │
-                        │   × N layers                     │
-                        └──────────────┬──────────────────┘
-                                       │ enc_out
-                        ┌──────────────▼──────────────────┐
-                        │            DECODER               │
-  Outputs (shifted) ───▶│  InputBlock (Embed + PosEnc)     │
-                        │       ↓                          │
-                        │  MaskedMultiHeadAttention        │
-                        │       ↓  (+ residual + norm)     │
-                        │  CrossAttention ◀── enc_out      │
-                        │       ↓  (+ residual + norm)     │
-                        │  FeedForward                     │
-                        │       ↓  (+ residual + norm)     │
-                        │   × N layers                     │
-                        └──────────────┬──────────────────┘
-                                       ↓
-                              Linear(d_model, vocab_size)
-                                       ↓
-                              Output Probabilities
-```
-
----
+[![view pdf](./transformer/img/front.jpeg)](./transformer/docs/transformer.pdf)
 
 ## 🗂️ Project Structure
 
